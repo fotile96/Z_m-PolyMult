@@ -28,7 +28,7 @@ typedef double llf;
 typedef complex<llf> comp;
 
 typedef long long ll;
-const ll P = 1000000007, M = 100000, __I2 = 70, P2 = P / 2;
+const ll P = 2147483647, M = 364889, __I2 = P - M * M % P, P2 = P / 2;
 #ifdef USE_LONG_DOUBLE
 const llf __I = sqrtl(__I2);
 #else
