@@ -102,6 +102,19 @@ void DAC(comp *a, const ll *d, int n) {
 #endif
 		ll whiten = d[i] >= P - P2 ? d[i] - P : d[i];
 		ll t = whiten / M, r = whiten - M * t;
+/* #define STRICT_SAFETY */
+#ifdef STRICT_SAFETY
+		// make t and r independent (assuming d[] random) to bound the result of DFT, slightly slower
+		if(rand()&1)
+			if(r < 0) {
+				r += M;
+				t--;
+			}
+			else {
+				r -= M;
+				t++;
+			}
+#endif
 		a[i] = comp(r, __I * t);
 	}
 }
