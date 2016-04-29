@@ -102,9 +102,9 @@ void DAC(comp *a, const ll *d, int n) {
 #endif
 		ll whiten = d[i] >= P - P2 ? d[i] - P : d[i];
 		ll t = whiten / M, r = whiten - M * t;
-/* #define STRICT_SAFETY */
+#define STRICT_SAFETY // use some tricks to bound the result of DFT, (roughly speaking, O(sqrt(n)M) in expectation)
 #ifdef STRICT_SAFETY
-		// make t and r independent (assuming d[] random) to bound the result of DFT, slightly slower
+		// make t and r independent (assuming d[] random)
 		if(rand()&1)
 			if(r < 0) {
 				r += M;
@@ -134,7 +134,7 @@ void ADC(ll *d, const comp *a, int n) {
 }
 
 
-void Mult(ll *c, ll *a, ll *b, int n) {
+void Mult(ll *c, const ll *a, const ll *b, int n) {
 	static ll noise[MAXN];
 	static int lastn, m;
 	static comp noise_hat[MAXN];
@@ -151,9 +151,19 @@ void Mult(ll *c, ll *a, ll *b, int n) {
 	static comp tmp[2][MAXN];
 	for(int i=0; i<n; i++) a_noise[i] = (a[i] + noise[i]) % P;
 	DAC(tmp[0], a_noise, n);
-	DAC(tmp[1], b, n);
 	FFT(tmp[0], n, 1);
+#ifdef STRICT_SAFETY
+	// make the pre-DFT b also random
+	for(int i=0; i<n; i++) a_noise[i] = (b[i] + noise[i]) % P;
+	DAC(tmp[1], a_noise, n);
+#else
+	DAC(tmp[1], b, n);
+#endif
 	FFT(tmp[1], n, 1);
+#ifdef STRICT_SAFETY
+	// substract c_hat from (b+c)_hat, this makes the actual b to be multiplicated have larger variance, but in same asymptotics.
+	for(int i=0; i<m; i++) tmp[1][i] -= noise_hat[i];
+#endif
 	for(int i=0; i<m; i++) tmp[0][i] *= tmp[1][i];
 	FFT(tmp[0], n, -1);
 	ADC(c, tmp[0], n*2);
@@ -167,7 +177,7 @@ void Mult(ll *c, ll *a, ll *b, int n) {
 }
 
 
-int n = 4000000;
+int n = 100000;
 ll a[MAXN], b[MAXN], c[MAXN];
 
 ll EvalPoly(const ll *a, ll x, int n) {
